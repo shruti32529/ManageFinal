@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Users - ManageEasy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="main-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span style="color: #66ccff; font-weight: bold;">ManageEasy</span>
+    </div>
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a href="/dashboard"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
+
+        <!-- User Management -->
+        <li class="has-submenu open">
+          <a href="#" onclick="toggleSubmenu(event)">
+            <i class="fa fa-users"></i> User Management
+            <i class="fa fa-chevron-down" style="margin-left:auto;font-size:0.8em;"></i>
+          </a>
+          <ul class="submenu" style="max-height:500px;">
+            <li><a href="/users" class="active"><i class="fa fa-user-circle"></i> Manage Users</a></li>
+            <li><a href="/users/groups"><i class="fa fa-users-cog"></i> Manage Groups</a></li>
+          </ul>
+        </li>
+
+        <li><a href="/categories"><i class="fa fa-tags"></i> Categories</a></li>
+
+        <!-- Products -->
+        <li class="has-submenu">
+          <a href="#" onclick="toggleSubmenu(event)">
+            <i class="fa fa-box"></i> Products
+            <i class="fa fa-chevron-down" style="margin-left:auto;font-size:0.8em;"></i>
+          </a>
+          <ul class="submenu">
+            <li><a href="/products"><i class="fa fa-boxes"></i> Manage Products</a></li>
+            <li><a href="/products/add"><i class="fa fa-plus-circle"></i> Add Product</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#"><i class="fa fa-images"></i> Media Files</a></li>
+
+        <!-- Sales -->
+        <li class="has-submenu">
+          <a href="#" onclick="toggleSubmenu(event)">
+            <i class="fa fa-chart-line"></i> Sales
+            <i class="fa fa-chevron-down" style="margin-left:auto;font-size:0.8em;"></i>
+          </a>
+          <ul class="submenu">
+            <li><a href="/sales"><i class="fa fa-list"></i> Manage Sales</a></li>
+            <li><a href="/sales/add"><i class="fa fa-plus-circle"></i> Add Sale</a></li>
+          </ul>
+        </li>
+
+        <!-- Reports -->
+        <li class="has-submenu">
+          <a href="#" onclick="toggleSubmenu(event)">
+            <i class="fa fa-file-invoice"></i> Sales Report
+            <i class="fa fa-chevron-down" style="margin-left:auto;font-size:0.8em;"></i>
+          </a>
+          <ul class="submenu">
+            <li><a href="/reports/daily"><i class="fa fa-calendar-day"></i> Daily Sales</a></li>
+            <li><a href="/reports/monthly"><i class="fa fa-calendar-alt"></i> Sales by Month</a></li>
+            <li><a href="/reports/date"><i class="fa fa-calendar"></i> Sales by Date</a></li>
+          </ul>
+        </li>
+
+        <li class="logout"><a href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+      </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <% if (typeof currentUser !== 'undefined') { %>
+        <div class="user-profile">
+          <a href="/profile" title="Edit Profile">
+            <% if (currentUser.avatar) { %>
+              <img src="<%= currentUser.avatar %>" alt="avatar" class="profile-img" />
+            <% } else { %>
+              <span class="profile-circle"><%= currentUser.email.charAt(0).toUpperCase() %></span>
+            <% } %>
+          </a>
+          <span class="user-name"><%= currentUser.name || currentUser.email %></span>
+        </div>
+      <% } %>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="dashboard-content">
+    <header class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <h1 class="page-title">Manage Users</h1>
+      <a href="/users/add" class="btn-action"><i class="fa fa-plus-circle"></i> Add User</a>
+    </header>
+
+    <% if (messages && messages.info) { %>
+      <div class="alert success"><%= Array.isArray(messages.info) ? messages.info.join(' ') : messages.info %></div>
+    <% } %>
+    <% if (messages && messages.error) { %>
+      <div class="alert error"><%= Array.isArray(messages.error) ? messages.error.join(' ') : messages.error %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-header">Users List</div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (users && users.length) { %>
+              <% users.forEach((user, i) => { %>
+                <tr>
+                  <td><%= i + 1 %></td>
+                  <td><%= user.name %></td>
+                  <td><%= user.email %></td>
+                  <td><%= user.role %></td>
+                  <td>
+                    <a href="/users/edit/<%= user._id %>" class="btn-action"><i class="fa fa-edit"></i> Edit</a>
+                    <form action="/users/delete/<%= user._id %>" method="POST" style="display:inline-block;">
+                      <button type="submit" class="btn-action secondary"><i class="fa fa-trash"></i> Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="5" style="text-align:center;">No users found</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- CSS -->
+<style>
+body { font-family:'Open Sans',sans-serif;color:#212529;background:#f8f9fa;margin:0;display:flex;min-height:100vh; }
+.main-container{ display:flex;width:100%; }
+.sidebar{ width:250px;background:#34495e;color:#fff;padding:20px;display:flex;flex-direction:column;justify-content:space-between; }
+.sidebar-header{ font-size:2em;font-weight:bold;margin-bottom:20px; }
+.sidebar-nav ul{ list-style:none;padding:0;margin:0; }
+.sidebar-nav a{ color:#fff;text-decoration:none;font-size:1.1em;display:block;padding:10px;border-radius:5px; }
+.sidebar-nav a.active,.sidebar-nav a:hover{ background:#2c3e50; }
+.submenu{ list-style:none;padding-left:34px;margin:0;max-height:0;overflow:hidden;transition:max-height 0.3s ease; }
+.has-submenu.open .submenu{ max-height:500px; }
+.dashboard-content{ flex-grow:1;padding:20px; }
+.page-title{ margin:0;font-weight:700;color:#212529; }
+.card{ background:#fff;border:1px solid #e9ecef;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.05);margin-bottom:20px; }
+.card-header{ padding:16px;border-bottom:1px solid #e9ecef;font-weight:600;color:#495057;background:#f8f9fa; }
+.card-body{ padding:20px; }
+table{ width:100%;border-collapse:collapse; }
+th,td{ padding:12px 15px;border-bottom:1px solid #e9ecef;text-align:left; }
+thead th{ background:#f2f4f6;text-transform:uppercase;font-size:0.85em;color:#343a40; }
+tr:nth-child(even){ background:#fdfdfd; }
+.btn-action{ padding:6px 12px;border-radius:6px;background:#007bff;color:#fff;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;font-size:0.9em; }
+.btn-action.secondary{ background:#dc3545; }
+.btn-action:hover{ opacity:0.9; }
+.alert{ padding:10px 14px;border-radius:6px;margin-bottom:15px;font-weight:600; }
+.alert.success{ background:#d4edda;color:#155724; }
+.alert.error{ background:#f8d7da;color:#721c24; }
+.profile-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 2px solid #66ccff; }
+.profile-circle { width: 40px; height: 40px; border-radius: 50%; background-color: #66ccff; color: #34495e; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5em; margin-right: 10px; }
+</style>
+
+<!-- Socket.io -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+function toggleSubmenu(e) {
+  e.preventDefault();
+  const parent = e.currentTarget.parentElement;
+  parent.classList.toggle('open');
+}
+
+// Real-time Add
+socket.on('userAdded', (user) => {
+  const tbody = document.querySelector('table tbody');
+  if (!tbody) return;
+  const tr = document.createElement('tr');
+  const rowCount = tbody.querySelectorAll('tr').length;
+
+  tr.innerHTML = `
+    <td>${rowCount + 1}</td>
+    <td>${user.name}</td>
+    <td>${user.email}</td>
+    <td>${user.role}</td>
+    <td>
+      <a href="/users/edit/${user._id}" class="btn-action"><i class="fa fa-edit"></i> Edit</a>
+      <form action="/users/delete/${user._id}" method="POST" style="display:inline-block;">
+        <button type="submit" class="btn-action secondary"><i class="fa fa-trash"></i> Delete</button>
+      </form>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Real-time Delete
+socket.on('userDeleted', (userId) => {
+  const tbody = document.querySelector('table tbody');
+  if (!tbody) return;
+
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.forEach((row) => {
+    const deleteBtn = row.querySelector(`form[action="/users/delete/${userId}"]`);
+    if (deleteBtn) row.remove();
+  });
+
+  tbody.querySelectorAll('tr').forEach((row, index) => {
+    row.querySelector('td:first-child').textContent = index + 1;
+  });
+});
+</script>
+</body>
+</html>

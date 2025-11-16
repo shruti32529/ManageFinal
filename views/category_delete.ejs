@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Category - ManageEasy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 80px auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+      color: #333;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 16px;
+      font-size: 14px;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: 0.3s;
+    }
+
+    .btn.secondary {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .btn.secondary:hover {
+      background-color: #d5d5d5;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 25px;
+    }
+
+    .card-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .alert.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn.primary {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn.primary:hover {
+      background-color: #c82333;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Delete Category</h1>
+      <a href="/categories" class="btn secondary"><i class="fa fa-arrow-left"></i> Back to Categories</a>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Confirm Deletion</div>
+      <div class="card-body">
+        <p>Are you sure you want to delete category <strong><%= category.name %></strong>?</p>
+        <form action="/categories/delete/<%= category._id %>" method="POST">
+          <div class="form-actions">
+            <button type="submit" class="btn primary"><i class="fa fa-trash-alt"></i> Confirm Delete</button>
+            <a href="/categories" class="btn secondary"><i class="fa fa-times"></i> Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

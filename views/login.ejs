@@ -1,0 +1,49 @@
+<% hideSidebar = true; layout('layout') -%>
+
+<div class="auth-wrapper">
+  <div class="auth-card" role="main">
+    <section class="auth-form">
+      <div class="brand">ManageEasy</div>
+      <h2>Sign in to your account</h2>
+
+      <% if (messages && messages.error) { %>
+        <div class="alert"><%= Array.isArray(messages.error) ? messages.error.join(' ') : messages.error %></div>
+      <% } %>
+
+      <form method="POST" action="/login" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="you@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required placeholder="Password" />
+        </div>
+
+        <div class="form-group">
+          <label for="role">I am a</label>
+          <select id="role" name="role" required>
+            <option value="staff" selected>Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn" type="submit">Sign In</button>
+          <a class="btn secondary" href="/register" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Register</a>
+        </div>
+      </form>
+
+      <p class="muted" style="margin-top:14px;">Use your account credentials. Admins should choose "Admin".</p>
+    </section>
+
+    <aside class="auth-welcome">
+      <h3>Welcome back</h3>
+      <p>Manage inventory, suppliers and sales with ease. Sign in to continue to the dashboard.</p>
+      <div style="width:100%; text-align:left;">
+        <a href="#" style="color:#fff; text-decoration:underline; font-weight:700;">Need help?</a>
+      </div>
+    </aside>
+  </div>
+</div>

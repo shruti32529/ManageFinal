@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManageEasy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">ManageEasy</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="/dashboard"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="/users"><i class="fa fa-users"></i> User Management</a></li>
+                <li><a href="/categories"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="/products"><i class="fa fa-box"></i> Products</a></li>
+                <li><a href="/media"><i class="fa fa-images"></i> Media Files</a></li>
+                <li><a href="/sales"><i class="fa fa-chart-line"></i> Sales</a></li>
+                <li><a href="/reports"><i class="fa fa-file-invoice"></i> Sales Report</a></li>
+                <li class="logout"><a href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+                <div class="user-profile">
+                    <% if (currentUser.avatar) { %>
+                      <img src="<%= currentUser.avatar %>" alt="avatar" class="profile-img" />
+                    <% } else { %>
+                      <span class="profile-circle"><%= currentUser.email.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                    <span class="user-name"><%= currentUser.name || currentUser.email %></span>
+                </div>
+            <% } %>
+        </div>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="dashboard-content">
+      <div class="dashboard-header">
+        <h1 class="page-title">Dashboard</h1>
+        <a href="/products/new" class="btn primary">+ Add New Product</a>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Sales Overview</div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (typeof sales !== 'undefined' && sales.length > 0) { %>
+                <% sales.forEach(sale => { %>
+                  <tr>
+                    <td>
+                      <%= sale.sale_date 
+                            ? sale.sale_date.toDateString() 
+                            : (sale.date ? sale.date.toDateString() : '') %>
+                    </td>
+                    <td><%= sale.product ? sale.product.name : '' %></td>
+                    <td><%= sale.quantity %></td>
+                    <td><%= sale.total %></td>
+                    <td>
+                      <span class="status <%= sale.status %>">
+                        <%= sale.status 
+                              ? sale.status.charAt(0).toUpperCase() + sale.status.slice(1) 
+                              : '' %>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <a href="/sales/edit/<%= sale._id %>" class="btn-action edit">
+                        <i class="fa fa-pencil-alt"></i> Edit
+                      </a>
+                      <a href="/sales/delete/<%= sale._id %>" class="btn-action delete">
+                        <i class="fa fa-trash"></i> Delete
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="text-center">No sales found</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

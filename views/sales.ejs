@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Sales</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="main-container">
+
+    <!-- Sidebar (included) -->
+    <%- include('partials/sidebar', { activePage: 'sales' }) %>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-content">
+      <div class="dashboard-header">
+        <h1 class="page-title">Manage Sales</h1>
+        <a href="/sales/add" class="btn primary"><i class="fas fa-plus"></i> Add New Sale</a>
+      </div>
+
+      <!-- Flash Messages -->
+      <% if (messages && messages.error) { %>
+        <div class="alert error"><%= messages.error %></div>
+      <% } %>
+      <% if (messages && messages.success) { %>
+        <div class="alert success"><%= messages.success %></div>
+      <% } %>
+
+      <!-- Sales List -->
+      <div class="card">
+        <div class="card-header">Sales List</div>
+        <div class="card-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (sales && sales.length) { %>
+                <% sales.forEach((sale, index) => { %>
+                  <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= sale.product ? sale.product.name : sale.product_name %></td>
+                    <td><%= sale.quantity %></td>
+                    <td>₹<%= sale.price %></td>
+                    <td>₹<%= sale.total %></td>
+                    <td><%= sale.sale_date ? new Date(sale.sale_date).toLocaleDateString() : '-' %></td>
+                    <td>
+                      <span class="status <%= sale.status ? sale.status.toLowerCase() : 'active' %>">
+                        <%= sale.status || 'Completed' %>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <a href="/sales/edit/<%= sale._id %>" class="btn-action edit">
+                        <i class="fas fa-edit"></i> Edit
+                      </a>
+                      <a href="/sales/delete/<%= sale._id %>" class="btn-action delete" onclick="return confirm('Delete this sale?')">
+                        <i class="fas fa-trash"></i> Delete
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" class="text-center">No sales found</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<% layout('layout') -%>
+
+<div class="card">
+  <div class="card-header">Welcome</div>
+  <div class="card-body">
+    <p>Hello, <strong><%= user && user.name ? user.name : (currentUser && currentUser.email) %></strong></p>
+    <p>Role: <strong><%= user && user.role ? user.role : (currentUser && currentUser.role) %></strong></p>
+    <p>Email: <strong><%= user && user.email ? user.email : (currentUser && currentUser.email) %></strong></p>
+    <p><a href="/logout" class="btn" style="display:inline-block;margin-top:8px;">Logout</a></p>
+  </div>
+</div>
+
+<!-- add more dashboard components here (metrics, product summaries) -->  

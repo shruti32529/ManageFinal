@@ -1,0 +1,47 @@
+<% layout('layout') -%>
+
+<div class="page-title-row">
+  <h1 class="page-title">My Profile</h1>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (messages && messages.info) { %>
+      <div class="alert" style="background:#e6ffef;color:#154e2e;"><%= Array.isArray(messages.info) ? messages.info.join(' ') : messages.info %></div>
+    <% } %>
+    <% if (messages && messages.error) { %>
+      <div class="alert"><%= Array.isArray(messages.error) ? messages.error.join(' ') : messages.error %></div>
+    <% } %>
+
+    <form action="/profile" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" value="<%= user && user.name ? user.name : '' %>" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="<%= user && user.email ? user.email : '' %>" required />
+      </div>
+
+      <div class="form-group">
+        <label>Current avatar</label><br/>
+        <% if (user && user.avatar) { %>
+          <img src="<%= user.avatar %>" alt="avatar" class="profile-img-large" />
+        <% } else { %>
+          <div class="profile-circle" style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;font-size:1.4rem;"><%= user && user.email ? user.email.charAt(0).toUpperCase() : 'U' %></div>
+        <% } %>
+      </div>
+
+      <div class="form-group">
+        <label for="avatar">Upload new avatar (jpg/png, &lt;2MB)</label>
+        <input id="avatar" name="avatar" type="file" accept="image/*" />
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="btn" type="submit">Save profile</button>
+        <a href="/admin" class="btn secondary" style="text-decoration:none; margin-left:8px;">Back</a>
+      </div>
+    </form>
+  </div>
+</div>

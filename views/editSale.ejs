@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Sale</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 20px 30px;
+      margin-top: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #007bff;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #842029;
+    }
+
+    .success {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Edit Sale</h1>
+
+    <% if (messages.error) { %>
+      <div class="message error"><%= messages.error %></div>
+    <% } %>
+    <% if (messages.success) { %>
+      <div class="message success"><%= messages.success %></div>
+    <% } %>
+
+    <form action="/sales/edit/<%= sale._id %>" method="POST">
+      <label for="product">Product:</label>
+      <select name="product" id="product" required>
+        <% products.forEach(p => { %>
+          <option value="<%= p._id %>" <%= sale.product && sale.product._id.toString() === p._id.toString() ? 'selected' : '' %>>
+            <%= p.name %>
+          </option>
+        <% }) %>
+      </select>
+
+      <label for="quantity">Quantity:</label>
+      <input type="number" name="quantity" id="quantity" value="<%= sale.quantity %>" required />
+
+      <label for="price">Price:</label>
+      <input type="number" step="0.01" name="price" id="price" value="<%= sale.price %>" required />
+
+      <label for="status">Status:</label>
+      <select name="status" id="status">
+        <option value="Pending" <%= sale.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+        <option value="Completed" <%= sale.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+        <option value="Cancelled" <%= sale.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+      </select>
+
+      <button type="submit">Update Sale</button>
+    </form>
+
+    <a href="/sales">← Back to Sales</a>
+  </div>
+</body>
+</html>

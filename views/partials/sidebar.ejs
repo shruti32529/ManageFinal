@@ -1,0 +1,31 @@
+<aside class="sidebar">
+    <h2 class="logo">ManageEasy</h2>
+    <ul class="menu">
+        <li class="<%= activePage === 'dashboard' ? 'active' : '' %>">
+            <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+        </li>
+        <li class="<%= activePage === 'users' ? 'active' : '' %>">
+            <a href="/users"><i class="fas fa-users"></i> User Management</a>
+        </li>
+        <li class="<%= activePage === 'categories' ? 'active' : '' %>">
+            <a href="/categories"><i class="fas fa-list"></i> Categories</a>
+        </li>
+        <li class="<%= activePage === 'products' ? 'active' : '' %>">
+            <a href="/products"><i class="fas fa-box"></i> Products</a>
+        </li>
+        <li class="<%= activePage === 'sales' ? 'active' : '' %>">
+            <a href="/sales"><i class="fas fa-shopping-cart"></i> Sales</a>
+        </li>
+        <li class="<%= activePage === 'sales-report' ? 'active' : '' %>">
+            <a href="/sales-report"><i class="fas fa-chart-line"></i> Sales Report</a>
+        </li>
+        <li>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </li>
+    </ul>
+
+    <div class="user-info">
+        <div class="avatar">S</div>
+        <span class="username">shruti</span>
+    </div>
+</aside>
