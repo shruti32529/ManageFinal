@@ -7,6 +7,7 @@ const flash = require('connect-flash');
 const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
+const redis = require('redis');
 
 dotenv.config();
 
@@ -15,9 +16,10 @@ require('./config/db')();
 
 // ------------------- ROUTES IMPORT -------------------
 const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/productRoutes');     // ✔ Product Route Activated
+const productRoutes = require('./routes/productRoutes'); // ✔ Product Route Activated
 const salesRoutes = require('./routes/sales');
 const categoriesRoutes = require('./routes/categories');
+const userRoutes = require('./routes/users'); // Users Route
 const groupRoutes = require('./routes/groups');
 const { attachUserToView } = require('./middleware/auth');
 
@@ -26,8 +28,17 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Make socket available everywhere
+// Make Socket.IO available globally
 app.set('io', io);
+
+// ------------------- REDIS CLIENT -------------------
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+redisClient.connect()
+  .then(() => console.log('✅ Redis connected'))
+  .catch((err) => console.error('❌ Redis connection error:', err));
+app.set('redisClient', redisClient);
 
 // ------------------- VIEW ENGINE SETUP -------------------
 let ejsMate;
@@ -85,9 +96,10 @@ app.use(attachUserToView);
 app.get('/login', (req, res) => res.render('login'));
 
 app.use('/', authRoutes);
-app.use('/products', productRoutes);           // ⭐ PRODUCT ROUTES ENABLED
-app.use('/sales', salesRoutes);
-app.use('/categories', categoriesRoutes);
+app.use('/products', productRoutes);           // ⭐ Product Routes
+app.use('/sales', salesRoutes);                // ⭐ Sales Routes
+app.use('/categories', categoriesRoutes);     // ⭐ Categories Routes
+app.use('/users', userRoutes);                 // ⭐ Users Routes
 app.use('/users/groups', groupRoutes);
 
 app.get('/', (req, res) => res.redirect('/login'));
@@ -100,6 +112,16 @@ app.get('/health', (req, res) =>
 // ------------------- WEBSOCKET EVENTS -------------------
 io.on('connection', (socket) => {
   console.log('🔹 WebSocket connected:', socket.id);
+
+  // Example: listen for a test event
+  socket.on('test-event', (data) => {
+    console.log('Test event received:', data);
+    io.emit('test-event', data); // broadcast to all
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔹 WebSocket disconnected:', socket.id);
+  });
 });
 
 // ------------------- ERROR HANDLING -------------------
