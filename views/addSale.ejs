@@ -1,117 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Add Sale</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f4f6f9;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      max-width: 500px;
-      margin: auto;
-      background: #fff;
-      padding: 20px 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: bold;
-      color: #444;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-    button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .back-link {
-      display: inline-block;
-      margin-top: 15px;
-      color: #007bff;
-      text-decoration: none;
-    }
-    .back-link:hover {
-      text-decoration: underline;
-    }
-    .message {
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .error {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    .success {
-      background: #d4edda;
-      color: #155724;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Add Sale</h1>
+<form action="/sales/add" method="POST">
+    <label>Product Name:</label>
+    <input type="text" name="productName" required><br><br>
 
-    <!-- Flash Messages -->
-    <% if (messages.error) { %>
-      <div class="message error"><%= messages.error %></div>
-    <% } %>
-    <% if (messages.success) { %>
-      <div class="message success"><%= messages.success %></div>
-    <% } %>
+    <label>Quantity:</label>
+    <input type="number" name="quantity" required oninput="calculateTotal()"><br><br>
 
-    <!-- Form -->
-    <form action="/sales/add" method="POST">
-      <label for="product">Product:</label>
-      <select name="product" id="product" required>
-        <% if (products && products.length) { %>
-          <% products.forEach(p => { %>
-            <option value="<%= p._id %>"><%= p.name %></option>
-          <% }) %>
-        <% } else { %>
-          <option disabled>No products available</option>
-        <% } %>
-      </select>
+    <label>Sales Price:</label>
+    <input type="number" name="salesPrice" required oninput="calculateTotal()"><br><br>
 
-      <label for="quantity">Quantity:</label>
-      <input type="number" name="quantity" id="quantity" min="1" required />
+    <label>Total:</label>
+    <input type="number" name="total" id="total" readonly><br><br>
 
-      <label for="price">Price:</label>
-      <input type="number" step="0.01" name="price" id="price" required />
-
-      <label for="status">Status:</label>
-      <select name="status" id="status">
+    <label>Status:</label>
+    <select name="status">
+        <option value="Paid">Paid</option>
         <option value="Pending">Pending</option>
-        <option value="Completed">Completed</option>
-      </select>
+    </select><br><br>
 
-      <button type="submit">Save Sale</button>
-    </form>
+    <button type="submit">Add Sale</button>
+</form>
 
-    <a href="/sales" class="back-link">← Back to Sales</a>
-  </div>
-</body>
-</html>
+<script>
+function calculateTotal() {
+    let q = document.querySelector('[name="quantity"]').value;
+    let p = document.querySelector('[name="salesPrice"]').value;
+    document.getElementById("total").value = q * p;
+}
+</script>

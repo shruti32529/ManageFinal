@@ -7,7 +7,8 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
     },
     stock: {
@@ -18,11 +19,6 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
-    },
-    status: {
-      type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
     },
   },
   { timestamps: true }
