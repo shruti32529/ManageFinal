@@ -9,6 +9,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const redis = require('redis');
 
+// Load environment variables
 dotenv.config();
 
 // ------------------- DATABASE CONNECTION -------------------
@@ -16,11 +17,15 @@ require('./config/db')();
 
 // ------------------- ROUTES IMPORT -------------------
 const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/productRoutes'); // ✔ Product Route Activated
+const productRoutes = require('./routes/productRoutes');
 const salesRoutes = require('./routes/sales');
 const categoriesRoutes = require('./routes/categories');
-const userRoutes = require('./routes/users'); // Users Route
+const userRoutes = require('./routes/users');
 const groupRoutes = require('./routes/groups');
+
+// 🔥 Only keep 1 correct sales report route
+const salesReportRoutes = require('./routes/salesReportRoutes');
+
 const { attachUserToView } = require('./middleware/auth');
 
 // ------------------- APP INITIALIZATION -------------------
@@ -35,9 +40,11 @@ app.set('io', io);
 const redisClient = redis.createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
+
 redisClient.connect()
   .then(() => console.log('✅ Redis connected'))
   .catch((err) => console.error('❌ Redis connection error:', err));
+
 app.set('redisClient', redisClient);
 
 // ------------------- VIEW ENGINE SETUP -------------------
@@ -46,7 +53,7 @@ try {
   ejsMate = require('ejs-mate');
   app.engine('ejs', ejsMate);
 } catch (err) {
-  console.error('❌ Missing "ejs-mate". Install with: npm install ejs-mate');
+  console.error('❌ Missing "ejs-mate". Install using: npm install ejs-mate');
   process.exit(1);
 }
 
@@ -69,17 +76,17 @@ app.use(
 
 app.use(flash());
 
-// Flash messages + logged-in user global access
+// Global variables for EJS
 app.use((req, res, next) => {
   res.locals.messages = req.flash();
   res.locals.currentUser = req.session.user || null;
   next();
 });
 
-// Prevent crash on EJS error
+// Prevent crash on EJS render errors
 app.use((req, res, next) => {
   const originalRender = res.render;
-  res.render = function (view, options, callback) {
+  res.render = function(view, options, callback) {
     try {
       return originalRender.call(this, view, options, callback);
     } catch (err) {
@@ -89,34 +96,39 @@ app.use((req, res, next) => {
   next();
 });
 
-// Attach user to EJS views
+// Attach logged-in user to views
 app.use(attachUserToView);
 
 // ------------------- ROUTES -------------------
 app.get('/login', (req, res) => res.render('login'));
 
+// Main app routes
 app.use('/', authRoutes);
-app.use('/products', productRoutes);           // ⭐ Product Routes
-app.use('/sales', salesRoutes);                // ⭐ Sales Routes
-app.use('/categories', categoriesRoutes);     // ⭐ Categories Routes
-app.use('/users', userRoutes);                 // ⭐ Users Routes
+app.use('/products', productRoutes);
+app.use('/sales', salesRoutes);
+app.use('/categories', categoriesRoutes);
+app.use('/users', userRoutes);
 app.use('/users/groups', groupRoutes);
 
+// Uploads
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+// 🟢 Correct final route for Sales Report
+app.use('/report', salesReportRoutes);
+
+// Default redirect to login
 app.get('/', (req, res) => res.redirect('/login'));
 
 // ------------------- HEALTH CHECK -------------------
-app.get('/health', (req, res) =>
-  res.json({ status: 'ok', uptime: process.uptime() })
-);
+app.get('/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
 // ------------------- WEBSOCKET EVENTS -------------------
 io.on('connection', (socket) => {
   console.log('🔹 WebSocket connected:', socket.id);
 
-  // Example: listen for a test event
   socket.on('test-event', (data) => {
     console.log('Test event received:', data);
-    io.emit('test-event', data); // broadcast to all
+    io.emit('test-event', data);
   });
 
   socket.on('disconnect', () => {
@@ -138,6 +150,6 @@ app.use((req, res) => {
 
 // ------------------- START SERVER -------------------
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
