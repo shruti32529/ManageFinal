@@ -9,9 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 
-
 <body>
-
   <div class="main-container">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -63,7 +61,6 @@
               <i class="fa fa-chevron-down" style="margin-left:auto;font-size:0.8em;"></i>
             </a>
             <ul class="submenu">
-             
               <li><a href="/report/sales-report"><i class="fa fa-calendar"></i> Sales by Date</a></li>
             </ul>
           </li>
@@ -98,7 +95,7 @@
       <div class="card">
         <div class="card-header">Sales List</div>
         <div class="card-body">
-          <table>
+          <table id="salesTable">
             <thead>
               <tr>
                 <th>#</th>
@@ -124,8 +121,7 @@
                     <td><%= sale.createdAt.toDateString() %></td>
                     <td>
                       <a href="/sales/edit/<%= sale._id %>" class="btn-action"><i class="fa fa-edit"></i> Edit</a>
-                      <a href="/sales/delete/<%= sale._id %>" class="btn-action secondary"
-                        onclick="return confirm('Are you sure?')">
+                      <a href="/sales/delete/<%= sale._id %>" class="btn-action secondary" onclick="return confirm('Are you sure?')">
                         <i class="fa fa-trash"></i> Delete
                       </a>
                     </td>
@@ -174,14 +170,38 @@
     .profile-circle { width: 40px; height: 40px; border-radius: 50%; background-color: #66ccff; color: #34495e; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5em; margin-right: 10px; }
   </style>
 
+  <!-- JavaScript -->
   <script>
     function toggleSubmenu(e) {
       e.preventDefault();
-      const parent = e.currentTarget.parentElement;
-      parent.classList.toggle('open');
+      e.currentTarget.parentElement.classList.toggle('open');
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const salesData = JSON.parse('<%- JSON.stringify(sales || []) %>');
+
+      // Save to localStorage
+      localStorage.setItem("salesData", JSON.stringify(salesData));
+
+      // Test the LocalStorage
+      const testData = localStorage.getItem("salesData");
+      if (testData) {
+        console.log("🎯 LocalStorage working and data saved correctly!");
+        console.log("📦 Stored Sales Data:", JSON.parse(testData));
+      } else {
+        console.warn("⚠ LocalStorage not working properly!");
+      }
+
+      // Optional: Show cached data when no sales from backend
+      if (!salesData.length) {
+        const cachedSales = JSON.parse(localStorage.getItem("salesData") || "[]");
+        if (cachedSales.length) {
+          alert("Displaying cached sales data from LocalStorage");
+          console.log("📦 Cached Sales Data:", cachedSales);
+        }
+      }
+    });
   </script>
 
 </body>
-
 </html>
