@@ -7,7 +7,13 @@ const flash = require('connect-flash');
 const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
-const redis = require('redis');
+const redisClient = require('./config/redis');
+const RedisStore = require('connect-redis').default;
+
+
+
+
+
 
 // Load environment variables
 dotenv.config();
@@ -37,16 +43,9 @@ const io = new Server(server);
 app.set('io', io);
 
 // ------------------- REDIS CLIENT -------------------
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
 
-redisClient.connect()
-  .then(() => console.log('✅ Redis connected'))
-  .catch((err) => console.error('❌ Redis connection error:', err));
 
 app.set('redisClient', redisClient);
-
 // ------------------- VIEW ENGINE SETUP -------------------
 let ejsMate;
 try {
