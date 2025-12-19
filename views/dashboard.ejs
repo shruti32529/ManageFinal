@@ -384,42 +384,39 @@
     }
     
     @media (max-width: 992px) {
-        .main-container {
-            flex-direction: column;
-        }
-        .sidebar {
-            width: 100%;
-            padding: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .sidebar-nav ul {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-        }
-        .sidebar-nav li {
-            margin: 5px;
-        }
-        .sidebar-nav a {
-            padding: 8px 12px;
-            font-size: 1em;
-        }
-        .sidebar-nav i {
-            display: none;
-        }
-        .dashboard-content {
-            padding: 10px;
-        }
+    .sidebar {
+        width: 100%;
     }
+    .sidebar-nav ul {
+        display: block;
+    }
+    .sidebar-nav li {
+        margin: 5px 0;
+    }
+    .sidebar-nav a {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        font-size: 1em;
+    }
+    .sidebar-nav i {
+        display: inline-block;
+        margin-right: 10px;
+    }
+}
+
 
     @media (max-width: 768px) {
-        .metric-cards {
-            grid-template-columns: 1fr;
-        }
-        .content-grid {
-            grid-template-columns: 1fr;
-        }
+    .metric-cards {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
     
     /* New CSS for the profile footer */
     .sidebar-footer {
