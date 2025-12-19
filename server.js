@@ -11,6 +11,8 @@ const redisClient = require('./config/redis');
 const RedisStore = require('connect-redis').default;
 
 
+dotenv.config({ path: '.env.example' });
+
 
 
 
