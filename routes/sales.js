@@ -1,14 +1,35 @@
 const express = require("express");
 const router = express.Router();
 const Sales = require("../models/Sale");
+const redis = require("../config/redis");
 
-// 📍 Show all sales
+// 📍 Show all sales (WITH REDIS CACHE)
 router.get("/", async (req, res) => {
   try {
+    // 1️⃣ Check Redis
+    const cachedSales = await redis.get("sales:data");
+
+    if (cachedSales) {
+      console.log("⚡ Cache HIT – Sales data from Redis");
+      return res.render("sales", {
+        title: "Sales Page",
+        sales: JSON.parse(cachedSales),
+      });
+    }
+
+    console.log("🐢 Cache MISS – Sales data from MongoDB");
+
+    // 2️⃣ Fetch from MongoDB
     const sales = await Sales.find().sort({ createdAt: -1 });
+
+    // 3️⃣ Store in Redis (60 seconds)
+    await redis.setex("sales:data", 60, JSON.stringify(sales));
+
     res.render("sales", { title: "Sales Page", sales });
+
   } catch (err) {
-    res.status(500).send("Server Error");
+    console.log("❌ Redis error:", err.message);
+    res.render("sales", { title: "Sales Page", sales: [] });
   }
 });
 
@@ -32,6 +53,10 @@ router.post("/add", async (req, res) => {
     });
 
     await newSale.save();
+
+    // ❗ Clear Redis cache after data change
+    await redis.del("sales:data");
+
     res.redirect("/sales");
   } catch (err) {
     console.error(err);
@@ -44,6 +69,7 @@ router.get("/edit/:id", async (req, res) => {
   try {
     const sale = await Sales.findById(req.params.id);
     if (!sale) return res.redirect("/sales");
+
     res.render("editSale", { title: "Edit Sale", sale });
   } catch (err) {
     res.status(500).send("Error loading sale");
@@ -64,6 +90,9 @@ router.post("/edit/:id", async (req, res) => {
       status,
     });
 
+    // ❗ Clear Redis cache
+    await redis.del("sales:data");
+
     res.redirect("/sales");
   } catch (err) {
     res.status(500).send("Error updating sale");
@@ -74,6 +103,10 @@ router.post("/edit/:id", async (req, res) => {
 router.get("/delete/:id", async (req, res) => {
   try {
     await Sales.findByIdAndDelete(req.params.id);
+
+    // ❗ Clear Redis cache
+    await redis.del("sales:data");
+
     res.redirect("/sales");
   } catch (err) {
     res.status(500).send("Error deleting sale");
