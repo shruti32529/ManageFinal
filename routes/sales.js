@@ -23,7 +23,8 @@ router.get("/", async (req, res) => {
     const sales = await Sales.find().sort({ createdAt: -1 });
 
     // 3️⃣ Store in Redis (60 seconds)
-    await redis.setex("sales:data", 60, JSON.stringify(sales));
+    await redis.set("sales:data", JSON.stringify(sales), { EX: 60 });
+
 
     res.render("sales", { title: "Sales Page", sales });
 

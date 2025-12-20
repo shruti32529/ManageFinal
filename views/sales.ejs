@@ -118,7 +118,8 @@
                     <td><%= sale.salesPrice %></td>
                     <td><%= sale.total %></td>
                     <td><%= sale.status %></td>
-                    <td><%= sale.createdAt.toDateString() %></td>
+                    <td><%= new Date(sale.createdAt).toDateString() %></td>
+
                     <td>
                       <a href="/sales/edit/<%= sale._id %>" class="btn-action"><i class="fa fa-edit"></i> Edit</a>
                       <a href="/sales/delete/<%= sale._id %>" class="btn-action secondary" onclick="return confirm('Are you sure?')">
