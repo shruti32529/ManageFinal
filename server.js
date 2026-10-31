@@ -7,17 +7,7 @@ const flash = require('connect-flash');
 const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
-const redisClient = require('./config/redis');
-const RedisStore = require('connect-redis').default;
 
-
-dotenv.config({ path: '.env.example' });
-
-
-
-
-
-// Load environment variables
 dotenv.config();
 
 // ------------------- DATABASE CONNECTION -------------------
@@ -44,10 +34,6 @@ const io = new Server(server);
 // Make Socket.IO available globally
 app.set('io', io);
 
-// ------------------- REDIS CLIENT -------------------
-
-
-app.set('redisClient', redisClient);
 // ------------------- VIEW ENGINE SETUP -------------------
 let ejsMate;
 try {
@@ -67,11 +53,21 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(morgan('dev'));
 
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET is missing');
+}
+
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'keyboardcat',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    }
   })
 );
 
@@ -151,6 +147,7 @@ app.use((req, res) => {
 
 // ------------------- START SERVER -------------------
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

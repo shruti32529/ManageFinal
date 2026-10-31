@@ -2,9 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Sales = require("../models/Sale");
 
-const redis = require("../config/redis");
-
-
 // 📍 Show all sales
 router.get("/", async (req, res) => {
   try {
