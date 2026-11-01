@@ -1,5 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+<%
+  const detailLabels = {
+    name: 'Name',
+    description: 'Description',
+    category: 'Category',
+    parent: 'Parent category',
+    stock: 'Stock',
+    price: 'Price',
+    productName: 'Product',
+    quantity: 'Quantity',
+    salesPrice: 'Unit price',
+    total: 'Total',
+    status: 'Status',
+    role: 'Role',
+    email: 'Email',
+    avatar: 'Profile photo'
+  };
+  const formatActivityValue = (key, value) => {
+    if (value === null || value === undefined || value === '') return '—';
+    if (['price', 'salesPrice', 'total'].includes(key) && Number.isFinite(Number(value))) {
+      return '$' + Number(value).toFixed(2);
+    }
+    return String(value);
+  };
+  const getActivityDetails = (details) => {
+    const data = details && typeof details === 'object' ? details : {};
+    const before = data.before && typeof data.before === 'object' ? data.before : null;
+    const after = data.after && typeof data.after === 'object' ? data.after : null;
+    if (before || after) {
+      const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+      return [...keys]
+        .filter((key) => !before || !after || String(before[key] ?? '') !== String(after[key] ?? ''))
+        .map((key) => ({
+          label: detailLabels[key] || key,
+          value: before && after
+            ? `${formatActivityValue(key, before[key])} → ${formatActivityValue(key, after[key])}`
+            : formatActivityValue(key, (after || before)[key])
+        }));
+    }
+    return Object.entries(data).map(([key, value]) => ({
+      label: detailLabels[key] || key,
+      value: formatActivityValue(key, value)
+    }));
+  };
+%>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,7 +99,7 @@
                 <th>Staff member</th>
                 <th>Action</th>
                 <th>Record</th>
-                <th>Details</th>
+                <th>Change details</th>
               </tr>
             </thead>
             <tbody>
@@ -65,7 +110,22 @@
                     <td><strong><%= activity.actorName %></strong><br><small><%= activity.actorEmail %></small></td>
                     <td><span class="action-badge"><%= activity.action.replace('_', ' ') %></span></td>
                     <td><strong><%= activity.entityType %></strong><%= activity.entityName ? ': ' + activity.entityName : '' %></td>
-                    <td><pre><%= JSON.stringify(activity.details || {}, null, 2) %></pre></td>
+                    <td>
+                      <% const detailRows = getActivityDetails(activity.details); %>
+                      <% if (detailRows.length) { %>
+                        <ul class="details-list">
+                          <% detailRows.forEach((detail) => { %>
+                            <li><span><%= detail.label %></span><strong><%= detail.value %></strong></li>
+                          <% }) %>
+                        </ul>
+                      <% } else if (activity.action === 'signed_in') { %>
+                        <span class="muted-detail">Staff signed in</span>
+                      <% } else if (activity.action === 'signed_out') { %>
+                        <span class="muted-detail">Staff signed out</span>
+                      <% } else { %>
+                        <span class="muted-detail">No additional details</span>
+                      <% } %>
+                    </td>
                   </tr>
                 <% }) %>
               <% } else { %>
@@ -225,14 +285,43 @@
       color: #6c757d;
     }
 
-    td pre {
-      min-width: 200px;
-      max-width: 460px;
+    .details-list {
+      min-width: 180px;
       margin: 0;
-      white-space: pre-wrap;
+      padding: 0;
+      list-style: none;
+    }
+
+    .details-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 3px 0;
+    }
+
+    .details-list li + li {
+      border-top: 1px solid #f0f2f5;
+    }
+
+    .details-list li span,
+    .muted-detail {
+      color: #6c757d;
+    }
+
+    .details-list li strong {
+      max-width: 280px;
       overflow-wrap: anywhere;
-      font: inherit;
+      text-align: right;
+      font-weight: 600;
       font-size: 0.85em;
+    }
+
+    .details-list li span {
+      flex: 0 0 auto;
+    }
+
+    .muted-detail {
+      white-space: nowrap;
     }
 
     .action-badge {
