@@ -1,5 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+<%
+    const activityDetailLabels = {
+        name: 'Name',
+        description: 'Description',
+        category: 'Category',
+        parent: 'Parent category',
+        stock: 'Stock',
+        price: 'Price',
+        productName: 'Product',
+        quantity: 'Quantity',
+        salesPrice: 'Unit price',
+        total: 'Total',
+        status: 'Status',
+        role: 'Role',
+        email: 'Email',
+        avatar: 'Profile photo'
+    };
+    const formatActivityValue = (key, value) => {
+        if (value === null || value === undefined || value === '') return '—';
+        if (['price', 'salesPrice', 'total'].includes(key) && Number.isFinite(Number(value))) {
+            return '$' + Number(value).toFixed(2);
+        }
+        return String(value);
+    };
+    const getActivityDetails = (details) => {
+        const data = details && typeof details === 'object' ? details : {};
+        const before = data.before && typeof data.before === 'object' ? data.before : null;
+        const after = data.after && typeof data.after === 'object' ? data.after : null;
+        if (before || after) {
+            const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+            return [...keys]
+                .filter((key) => !before || !after || String(before[key] ?? '') !== String(after[key] ?? ''))
+                .map((key) => ({
+                    label: activityDetailLabels[key] || key,
+                    value: before && after
+                        ? `${formatActivityValue(key, before[key])} → ${formatActivityValue(key, after[key])}`
+                        : formatActivityValue(key, (after || before)[key])
+                }));
+        }
+        return Object.entries(data).map(([key, value]) => ({
+            label: activityDetailLabels[key] || key,
+            value: formatActivityValue(key, value)
+        }));
+    };
+%>
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -212,7 +257,7 @@
             <div class="card-body activity-table-wrap">
                 <table>
                     <thead>
-                        <tr><th>When</th><th>Staff</th><th>Action</th><th>Item</th><th>Details</th></tr>
+                        <tr><th>When</th><th>Staff</th><th>Action</th><th>Item</th><th>Change details</th></tr>
                     </thead>
                     <tbody>
                         <% if (Array.isArray(latestActivity) && latestActivity.length) { %>
@@ -222,7 +267,22 @@
                                     <td><%= activity.actorName %><br><small><%= activity.actorEmail %></small></td>
                                     <td><%= activity.action.replace('_', ' ') %></td>
                                     <td><%= activity.entityType %><%= activity.entityName ? ': ' + activity.entityName : '' %></td>
-                                    <td><pre><%= JSON.stringify(activity.details || {}) %></pre></td>
+                                    <td>
+                                        <% const detailRows = getActivityDetails(activity.details); %>
+                                        <% if (detailRows.length) { %>
+                                            <ul class="activity-details">
+                                                <% detailRows.forEach((detail) => { %>
+                                                    <li><span><%= detail.label %></span><strong><%= detail.value %></strong></li>
+                                                <% }) %>
+                                            </ul>
+                                        <% } else if (activity.action === 'signed_in') { %>
+                                            <span class="activity-muted-detail">Staff signed in</span>
+                                        <% } else if (activity.action === 'signed_out') { %>
+                                            <span class="activity-muted-detail">Staff signed out</span>
+                                        <% } else { %>
+                                            <span class="activity-muted-detail">No additional details</span>
+                                        <% } %>
+                                    </td>
                                 </tr>
                             <% }) %>
                         <% } else { %>
@@ -371,13 +431,42 @@
         overflow-x: auto;
     }
 
-    .activity-table-wrap pre {
-        max-width: 420px;
+    .activity-details {
+        min-width: 180px;
         margin: 0;
-        white-space: pre-wrap;
+        padding: 0;
+        list-style: none;
+    }
+
+    .activity-details li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 3px 0;
+    }
+
+    .activity-details li + li {
+        border-top: 1px solid #f0f2f5;
+    }
+
+    .activity-details li span,
+    .activity-muted-detail {
+        color: #6c757d;
+    }
+
+    .activity-details li strong {
+        max-width: 220px;
         overflow-wrap: anywhere;
-        font: inherit;
+        text-align: right;
         font-size: 0.85em;
+    }
+
+    .activity-details li span {
+        flex: 0 0 auto;
+    }
+
+    .activity-muted-detail {
+        white-space: nowrap;
     }
     
     table {
