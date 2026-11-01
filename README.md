@@ -22,3 +22,7 @@ Set these variables in the Render service's Environment settings:
 - `SESSION_SECRET` and `JWT_SECRET` to different, randomly generated values. Never commit the actual values.
 
 Production sessions are stored in MongoDB. The app trusts Render's HTTPS proxy so the secure session cookie is issued correctly.
+
+## Staff activity history
+
+Admins can review recorded staff sign-ins, sales, profile changes, and product/category additions, edits, and deletions from the Admin Dashboard or `/admin/activity`. Product and sale records also retain the staff member who created or sold them. Activity history starts when this version is deployed; previous records cannot be attributed retroactively.

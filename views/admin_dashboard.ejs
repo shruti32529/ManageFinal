@@ -26,6 +26,7 @@
                     <ul class="submenu">
                         <li><a href="/users"><i class="fa fa-user-circle"></i> Manage Users</a></li>
                         <li><a href="/users/groups"><i class="fa fa-users-cog"></i> Manage Groups</a></li>
+                        <li><a href="/admin/activity"><i class="fa fa-clipboard-list"></i> Staff Activity</a></li>
                     </ul>
                 </li>
                 <% } %>
@@ -161,19 +162,20 @@
                 <div class="card-header">Latest Sales</div>
                 <div class="card-body">
                     <table>
-                        <thead><tr><th>#</th><th>Product Name</th><th>Date</th><th>Total Sale</th></tr></thead>
+                        <thead><tr><th>#</th><th>Product Name</th><th>Sold By</th><th>Date</th><th>Total Sale</th></tr></thead>
                         <tbody>
                             <% if (latestSales.length) { %>
                                 <% latestSales.forEach((sale, index) => { %>
                                     <tr>
                                         <td><%= index + 1 %></td>
                                         <td><%= sale.productName %></td>
+                                        <td><%= sale.soldByName || (sale.soldBy && sale.soldBy.name) || 'Not recorded' %></td>
                                         <td><%= new Date(sale.createdAt).toLocaleDateString() %></td>
                                         <td>$<%= Number(sale.total).toFixed(2) %></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
-                                <tr><td colspan="4">No sales recorded yet.</td></tr>
+                                <tr><td colspan="5">No sales recorded yet.</td></tr>
                             <% } %>
                         </tbody>
                     </table>
@@ -183,7 +185,7 @@
                 <div class="card-header">Recently Added Products</div>
                 <div class="card-body">
                     <table>
-                        <thead><tr><th>Product Name</th><th>Category</th><th>Price</th></tr></thead>
+                        <thead><tr><th>Product Name</th><th>Category</th><th>Price</th><th>Added By</th></tr></thead>
                         <tbody>
                             <% if (recentProducts.length) { %>
                                 <% recentProducts.forEach((product) => { %>
@@ -191,16 +193,45 @@
                                         <td><%= product.name %></td>
                                         <td><%= product.category ? product.category.name : 'Uncategorized' %></td>
                                         <td>$<%= Number(product.price).toFixed(2) %></td>
+                                        <td><%= product.createdByName || (product.createdBy && product.createdBy.name) || 'Not recorded' %></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
-                                <tr><td colspan="3">No products added yet.</td></tr>
+                                <tr><td colspan="4">No products added yet.</td></tr>
                             <% } %>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+        <section class="card activity-card">
+            <div class="card-header">
+                <span>Recent Staff Activity</span>
+                <a href="/admin/activity">View all activity</a>
+            </div>
+            <div class="card-body activity-table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>When</th><th>Staff</th><th>Action</th><th>Item</th><th>Details</th></tr>
+                    </thead>
+                    <tbody>
+                        <% if (typeof latestActivity !== 'undefined' && latestActivity.length) { %>
+                            <% latestActivity.forEach((activity) => { %>
+                                <tr>
+                                    <td><%= new Date(activity.createdAt).toLocaleString() %></td>
+                                    <td><%= activity.actorName %><br><small><%= activity.actorEmail %></small></td>
+                                    <td><%= activity.action.replace('_', ' ') %></td>
+                                    <td><%= activity.entityType %><%= activity.entityName ? ': ' + activity.entityName : '' %></td>
+                                    <td><pre><%= JSON.stringify(activity.details || {}) %></pre></td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="5">No staff activity has been recorded yet.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </div>
 
@@ -317,6 +348,36 @@
 
     .card-body {
         padding: 20px;
+    }
+
+    .activity-card {
+        margin-top: 20px;
+    }
+
+    .activity-card .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .activity-card .card-header a {
+        color: #007bff;
+        font-size: 0.9em;
+        text-decoration: none;
+    }
+
+    .activity-table-wrap {
+        overflow-x: auto;
+    }
+
+    .activity-table-wrap pre {
+        max-width: 420px;
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font: inherit;
+        font-size: 0.85em;
     }
     
     table {

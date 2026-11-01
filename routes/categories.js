@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
+const recordStaffActivity = require('../middleware/recordStaffActivity');
 
 // List categories
 router.get('/', async (req, res) => {
@@ -37,6 +38,13 @@ router.post('/add', async (req, res) => {
     });
     
     await cat.save();
+    await recordStaffActivity(req, {
+      action: 'created',
+      entityType: 'Category',
+      entityId: cat._id,
+      entityName: cat.name,
+      details: { after: { name: cat.name, description: cat.description, parent: cat.parent, status: cat.status } }
+    });
 
     // 🔥 WebSocket Emit for New Category
     const io = req.app.get('io');
@@ -76,6 +84,11 @@ router.get('/edit/:id', async (req, res) => {
 router.post('/edit/:id', async (req, res) => {
   try {
     const { name, description, parent, status } = req.body;
+    const previousCategory = await Category.findById(req.params.id).lean();
+    if (!previousCategory) {
+      req.flash('error', 'Category not found');
+      return res.redirect('/categories');
+    }
 
     const updated = await Category.findByIdAndUpdate(
       req.params.id,
@@ -87,6 +100,22 @@ router.post('/edit/:id', async (req, res) => {
       },
       { new: true }
     );
+
+    await recordStaffActivity(req, {
+      action: 'updated',
+      entityType: 'Category',
+      entityId: updated._id,
+      entityName: updated.name,
+      details: {
+        before: {
+          name: previousCategory.name,
+          description: previousCategory.description,
+          parent: previousCategory.parent,
+          status: previousCategory.status
+        },
+        after: { name: updated.name, description: updated.description, parent: updated.parent, status: updated.status }
+      }
+    });
 
     // 🔥 WebSocket Emit for Updated Category
     const io = req.app.get('io');
@@ -125,6 +154,25 @@ router.get('/delete/:id', async (req, res) => {
 router.post('/delete/:id', async (req, res) => {
   try {
     const deleted = await Category.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      req.flash('error', 'Category not found');
+      return res.redirect('/categories');
+    }
+
+    await recordStaffActivity(req, {
+      action: 'deleted',
+      entityType: 'Category',
+      entityId: deleted._id,
+      entityName: deleted.name,
+      details: {
+        before: {
+          name: deleted.name,
+          description: deleted.description,
+          parent: deleted.parent,
+          status: deleted.status
+        }
+      }
+    });
 
     // 🔥 WebSocket Emit for Deleted Category
     const io = req.app.get('io');

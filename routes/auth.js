@@ -6,7 +6,9 @@ const Category = require('../models/Category');
 const Product = require('../models/Product');
 const Sales = require('../models/Sale');
 const UserGroup = require('../models/UserGroup');
+const StaffActivity = require('../models/StaffActivity');
 const { ensureAuth, ensureAdmin } = require('../middleware/auth');
+const recordStaffActivity = require('../middleware/recordStaffActivity');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -43,11 +45,12 @@ async function getDashboardData() {
         { $sort: { quantitySold: -1, _id: 1 } },
         { $limit: 5 }
       ]),
-      Sales.find().sort({ createdAt: -1 }).limit(5).lean(),
+      Sales.find().sort({ createdAt: -1 }).limit(5).populate('soldBy', 'name email').lean(),
       Product.find()
         .sort({ createdAt: -1 })
         .limit(5)
         .populate('category', 'name')
+        .populate('createdBy', 'name email')
         .lean()
     ]);
 
@@ -67,6 +70,13 @@ async function getDashboardData() {
 const renderDashboard = (view, title) => async (req, res, next) => {
   try {
     const dashboardData = await getDashboardData();
+    dashboardData.latestActivity = [];
+    if (view === 'admin_dashboard') {
+      dashboardData.latestActivity = await StaffActivity.find({ actorRole: 'staff' })
+        .sort({ createdAt: -1 })
+        .limit(15)
+        .lean();
+    }
     return res.render(view, { title, user: req.session.user, ...dashboardData });
   } catch (err) {
     return next(err);
@@ -144,7 +154,11 @@ router.post('/login', async (req, res) => {
           });
         }
 
-        return res.redirect(redirectPath);
+        recordStaffActivity(req, {
+          action: 'signed_in',
+          entityType: 'Session',
+          entityName: 'Login'
+        }).then(() => res.redirect(redirectPath));
       });
     });
   } catch (err) {
@@ -155,23 +169,61 @@ router.post('/login', async (req, res) => {
 });
 
 // Logout
-router.get('/logout', (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) return next(err);
-    res.clearCookie('connect.sid', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
+router.get('/logout', async (req, res, next) => {
+  try {
+    await recordStaffActivity(req, {
+      action: 'signed_out',
+      entityType: 'Session',
+      entityName: 'Logout'
     });
-    return res.redirect('/login');
-  });
+
+    req.session.destroy((err) => {
+      if (err) return next(err);
+      res.clearCookie('connect.sid', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+      });
+      return res.redirect('/login');
+    });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 // ------------------- DASHBOARD -------------------
 router.get('/dashboard', ensureAuth, renderDashboard('dashboard', 'Dashboard'));
 
 router.get('/admin', ensureAuth, ensureAdmin, renderDashboard('admin_dashboard', 'Admin Dashboard'));
+
+router.get('/admin/activity', ensureAuth, ensureAdmin, async (req, res, next) => {
+  try {
+    const requestedPage = Number.parseInt(req.query.page, 10);
+    const requestedPageNumber = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const pageSize = 50;
+    const filter = { actorRole: 'staff' };
+    const totalCount = await StaffActivity.countDocuments(filter);
+    const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+    const page = Math.min(requestedPageNumber, pageCount);
+    const activities = await StaffActivity.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .lean();
+
+    res.render('staff_activity', {
+      title: 'Staff Activity',
+      hideSidebar: false,
+      activities,
+      page,
+      pageCount,
+      totalCount
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 // ------------------- PROFILE -------------------
 router.get('/profile', ensureAuth, async (req, res) => {
@@ -189,6 +241,11 @@ router.post('/profile', ensureAuth, upload.single('avatar'), async (req, res) =>
   try {
     const userId = req.session.user.id;
     const { name, email } = req.body;
+    const previousUser = await User.findById(userId).lean();
+    if (!previousUser) {
+      req.flash('error', 'User not found');
+      return res.redirect('/login');
+    }
     const update = {};
     if (name) update.name = name;
     if (email) update.email = email.toLowerCase();
@@ -204,6 +261,16 @@ router.post('/profile', ensureAuth, upload.single('avatar'), async (req, res) =>
 
     const user = await User.findByIdAndUpdate(userId, update, { new: true }).lean();
     req.session.user = { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar || null };
+    await recordStaffActivity(req, {
+      action: 'updated',
+      entityType: 'Profile',
+      entityId: user._id,
+      entityName: user.name || user.email,
+      details: {
+        before: { name: previousUser.name, email: previousUser.email, avatar: previousUser.avatar },
+        after: { name: user.name, email: user.email, avatar: user.avatar }
+      }
+    });
     req.flash('info', 'Profile updated');
     res.redirect('/profile');
   } catch (err) {

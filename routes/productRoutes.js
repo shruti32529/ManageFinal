@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const recordStaffActivity = require("../middleware/recordStaffActivity");
 
 // Middleware to attach io to req
 router.use((req, res, next) => {
@@ -43,12 +44,24 @@ router.get("/add", async (req, res) => {
 router.post("/add", async (req, res) => {
   try {
     const { name, price, stock, category } = req.body;
+    const actor = req.session.user;
 
     const product = await Product.create({
       name,
       price,
       stock,
       category,
+      createdBy: actor.id,
+      createdByName: actor.name || actor.email,
+      createdByEmail: actor.email,
+    });
+
+    await recordStaffActivity(req, {
+      action: "created",
+      entityType: "Product",
+      entityId: product._id,
+      entityName: product.name,
+      details: { after: { name, category, price, stock } },
     });
 
     // Emit socket event for all clients
@@ -88,12 +101,33 @@ router.get("/edit/:id", async (req, res) => {
 router.post("/edit/:id", async (req, res) => {
   try {
     const { name, price, stock, category } = req.body;
+    const previousProduct = await Product.findById(req.params.id).lean();
+    if (!previousProduct) {
+      req.flash("error", "Product not found");
+      return res.redirect("/products");
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, price, stock, category },
+      { name, price, stock, category, updatedBy: req.session.user.id },
       { new: true }
     ).populate("category");
+
+    await recordStaffActivity(req, {
+      action: "updated",
+      entityType: "Product",
+      entityId: updatedProduct._id,
+      entityName: updatedProduct.name,
+      details: {
+        before: {
+          name: previousProduct.name,
+          category: previousProduct.category,
+          price: previousProduct.price,
+          stock: previousProduct.stock,
+        },
+        after: { name, category, price, stock },
+      },
+    });
 
     // Emit socket event for all clients
     req.io.emit("update-products", updatedProduct);
@@ -109,7 +143,26 @@ router.post("/edit/:id", async (req, res) => {
 // Delete Product
 router.post("/delete/:id", async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) {
+      req.flash("error", "Product not found");
+      return res.redirect("/products");
+    }
+
+    await recordStaffActivity(req, {
+      action: "deleted",
+      entityType: "Product",
+      entityId: product._id,
+      entityName: product.name,
+      details: {
+        before: {
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          stock: product.stock,
+        },
+      },
+    });
 
     // Emit socket event for all clients
     req.io.emit("delete-product", req.params.id);

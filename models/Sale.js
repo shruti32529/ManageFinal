@@ -22,6 +22,24 @@ const SalesSchema = new mongoose.Schema({
     enum: ["Paid", "Pending"],
     default: "Pending",
   },
+  soldBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  soldByName: {
+    type: String,
+    default: "",
+  },
+  soldByEmail: {
+    type: String,
+    default: "",
+  },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
