@@ -8,10 +8,10 @@ const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // ------------------- DATABASE CONNECTION -------------------
-require('./config/db')();
+const connectDB = require('./config/db');
 
 // ------------------- ROUTES IMPORT -------------------
 const authRoutes = require('./routes/auth');
@@ -148,6 +148,17 @@ app.use((req, res) => {
 // ------------------- START SERVER -------------------
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectDB();
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Server startup failed:', err);
+    process.exit(1);
+  }
+}
+
+startServer();
