@@ -4,7 +4,7 @@
   <div class="activity-heading">
     <div>
       <h1>Staff Activity</h1>
-      <p>Recorded staff sign-ins, sales, and changes made to products, categories, and profiles. Tracking starts after this update is deployed.</p>
+      <p>Only staff sign-ins, sales, and changes made to products, categories, and profiles are shown here. Tracking starts after this update is deployed; older records cannot be attributed retroactively.</p>
     </div>
     <a class="btn primary" href="/admin">Back to dashboard</a>
   </div>
@@ -34,7 +34,7 @@
               </tr>
             <% }) %>
           <% } else { %>
-            <tr><td colspan="5" class="empty-state">No staff activity has been recorded yet.</td></tr>
+            <tr><td colspan="5" class="empty-state">No staff activity recorded yet. New staff actions will appear here.</td></tr>
           <% } %>
         </tbody>
       </table>

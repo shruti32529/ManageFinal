@@ -169,7 +169,7 @@
                                     <tr>
                                         <td><%= index + 1 %></td>
                                         <td><%= sale.productName %></td>
-                                        <td><%= sale.soldByName || (sale.soldBy && sale.soldBy.name) || 'Not recorded' %></td>
+                                        <td><%= sale.soldByName || (sale.soldBy && sale.soldBy.name) || 'Before staff tracking' %></td>
                                         <td><%= new Date(sale.createdAt).toLocaleDateString() %></td>
                                         <td>$<%= Number(sale.total).toFixed(2) %></td>
                                     </tr>
@@ -193,7 +193,7 @@
                                         <td><%= product.name %></td>
                                         <td><%= product.category ? product.category.name : 'Uncategorized' %></td>
                                         <td>$<%= Number(product.price).toFixed(2) %></td>
-                                        <td><%= product.createdByName || (product.createdBy && product.createdBy.name) || 'Not recorded' %></td>
+                                        <td><%= product.createdByName || (product.createdBy && product.createdBy.name) || 'Before staff tracking' %></td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
@@ -215,7 +215,7 @@
                         <tr><th>When</th><th>Staff</th><th>Action</th><th>Item</th><th>Details</th></tr>
                     </thead>
                     <tbody>
-                        <% if (typeof latestActivity !== 'undefined' && latestActivity.length) { %>
+                        <% if (Array.isArray(latestActivity) && latestActivity.length) { %>
                             <% latestActivity.forEach((activity) => { %>
                                 <tr>
                                     <td><%= new Date(activity.createdAt).toLocaleString() %></td>
@@ -226,7 +226,7 @@
                                 </tr>
                             <% }) %>
                         <% } else { %>
-                            <tr><td colspan="5">No staff activity has been recorded yet.</td></tr>
+                            <tr><td colspan="5">No staff activity recorded yet. New staff actions will appear here.</td></tr>
                         <% } %>
                     </tbody>
                 </table>

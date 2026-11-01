@@ -118,9 +118,9 @@ app.use(attachUserToView);
 app.use('/users', ensureAuth, ensureAdmin);
 app.use('/report', ensureAuth, ensureAdmin);
 app.use('/', authRoutes);
-app.use('/products', productRoutes);
-app.use('/sales', salesRoutes);
-app.use('/categories', categoriesRoutes);
+app.use('/products', ensureAuth, productRoutes);
+app.use('/sales', ensureAuth, salesRoutes);
+app.use('/categories', ensureAuth, categoriesRoutes);
 app.use('/users', userRoutes);
 app.use('/users/groups', groupRoutes);
 
