@@ -38,14 +38,15 @@ function sanitizeDetails(details) {
 
 async function recordStaffActivity(req, event) {
   const actor = req.session && req.session.user;
-  if (!actor || actor.role !== 'staff' || !actor.id) return;
+  const actorRole = actor && String(actor.role).toLowerCase();
+  if (!actor || actorRole !== 'staff' || !actor.id) return;
 
   try {
     await StaffActivity.create({
       actorId: actor.id,
       actorName: actor.name || actor.email,
       actorEmail: actor.email,
-      actorRole: actor.role,
+      actorRole,
       action: event.action,
       entityType: event.entityType,
       entityId: event.entityId ? String(event.entityId) : '',
