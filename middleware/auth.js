@@ -32,5 +32,5 @@ exports.ensureAdmin = (req, res, next) => {
     return next();
   }
   req.flash('error', 'Admin access required');
-  return res.redirect('/login');
+  return res.redirect(req.session && req.session.user ? '/dashboard' : '/login');
 };

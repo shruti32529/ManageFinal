@@ -25,7 +25,7 @@ const groupRoutes = require('./routes/groups');
 // 🔥 Only keep 1 correct sales report route
 const salesReportRoutes = require('./routes/salesReportRoutes');
 
-const { attachUserToView } = require('./middleware/auth');
+const { attachUserToView, ensureAuth, ensureAdmin } = require('./middleware/auth');
 
 // ------------------- APP INITIALIZATION -------------------
 const app = express();
@@ -115,6 +115,8 @@ app.use(attachUserToView);
 
 // ------------------- ROUTES -------------------
 // Main app routes
+app.use('/users', ensureAuth, ensureAdmin);
+app.use('/report', ensureAuth, ensureAdmin);
 app.use('/', authRoutes);
 app.use('/products', productRoutes);
 app.use('/sales', salesRoutes);

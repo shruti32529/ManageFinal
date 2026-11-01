@@ -2,6 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Category = require('../models/Category');
+const Product = require('../models/Product');
+const Sales = require('../models/Sale');
 const UserGroup = require('../models/UserGroup');
 const { ensureAuth, ensureAdmin } = require('../middleware/auth');
 const path = require('path');
@@ -22,6 +25,54 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 } }); // 2MB
 
+async function getDashboardData() {
+  const [userCount, categoryCount, productCount, salesTotal, topProducts, latestSales, recentProducts] =
+    await Promise.all([
+      User.countDocuments(),
+      Category.countDocuments(),
+      Product.countDocuments(),
+      Sales.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
+      Sales.aggregate([
+        {
+          $group: {
+            _id: '$productName',
+            quantitySold: { $sum: '$quantity' },
+            transactionCount: { $sum: 1 }
+          }
+        },
+        { $sort: { quantitySold: -1, _id: 1 } },
+        { $limit: 5 }
+      ]),
+      Sales.find().sort({ createdAt: -1 }).limit(5).lean(),
+      Product.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('category', 'name')
+        .lean()
+    ]);
+
+  return {
+    stats: {
+      userCount,
+      categoryCount,
+      productCount,
+      salesTotal: salesTotal[0]?.total || 0
+    },
+    topProducts,
+    latestSales,
+    recentProducts
+  };
+}
+
+const renderDashboard = (view, title) => async (req, res, next) => {
+  try {
+    const dashboardData = await getDashboardData();
+    return res.render(view, { title, user: req.session.user, ...dashboardData });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 // ------------------- AUTH ROUTES -------------------
 // Login & Register pages
 router.get('/login', (req, res) => res.render('login', { title: 'Login' }));
@@ -29,7 +80,7 @@ router.get('/register', (req, res) => res.render('register', { title: 'Register'
 
 // Register handler
 router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body || {};
+  const { name, email, password } = req.body || {};
   try {
     if (!name || !email || !password) {
       req.flash('error', 'Please fill all required fields');
@@ -41,7 +92,7 @@ router.post('/register', async (req, res) => {
       req.flash('error', 'Email already registered');
       return res.redirect('/register');
     }
-    const user = new User({ name, email: normalizedEmail, password, role: role || 'staff' });
+    const user = new User({ name, email: normalizedEmail, password, role: 'staff' });
     await user.save();
     req.flash('info', 'Registration successful — please login');
     return res.redirect('/login');
@@ -118,13 +169,9 @@ router.get('/logout', (req, res, next) => {
 });
 
 // ------------------- DASHBOARD -------------------
-router.get('/dashboard', ensureAuth, (req, res) => {
-  res.render('dashboard', { title: 'Dashboard', user: req.session.user });
-});
+router.get('/dashboard', ensureAuth, renderDashboard('dashboard', 'Dashboard'));
 
-router.get('/admin', ensureAuth, ensureAdmin, (req, res) => {
-  res.render('admin_dashboard', { title: 'Admin Dashboard', user: req.session.user });
-});
+router.get('/admin', ensureAuth, ensureAdmin, renderDashboard('admin_dashboard', 'Admin Dashboard'));
 
 // ------------------- PROFILE -------------------
 router.get('/profile', ensureAuth, async (req, res) => {

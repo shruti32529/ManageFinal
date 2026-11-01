@@ -20,6 +20,7 @@
         <ul>
           <li><a href="/dashboard"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
 
+          <% if (currentUser && currentUser.role === 'admin') { %>
           <li class="has-submenu">
             <a href="#" onclick="toggleSubmenu(event)">
               <i class="fa fa-users"></i> User Management
@@ -30,6 +31,7 @@
               <li><a href="/users/groups"><i class="fa fa-users-cog"></i> Manage Groups</a></li>
             </ul>
           </li>
+          <% } %>
 
           <li><a href="/categories"><i class="fa fa-tags"></i> Categories</a></li>
 
@@ -55,6 +57,7 @@
             </ul>
           </li>
 
+          <% if (currentUser && currentUser.role === 'admin') { %>
           <li class="has-submenu">
             <a href="#" onclick="toggleSubmenu(event)">
               <i class="fa fa-file-invoice"></i> Sales Report
@@ -64,6 +67,7 @@
               <li><a href="/report/sales-report"><i class="fa fa-calendar"></i> Sales by Date</a></li>
             </ul>
           </li>
+          <% } %>
 
           <li class="logout"><a href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
         </ul>

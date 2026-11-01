@@ -17,6 +17,7 @@
         <nav class="sidebar-nav">
             <ul>
                 <li><a href="#" class="active"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
+                <% if (currentUser && currentUser.role === 'admin') { %>
                 <li class="has-submenu">
                     <a href="#" onclick="toggleSubmenu(event)">
                         <i class="fa fa-users"></i> User Management
@@ -27,6 +28,7 @@
                         <li><a href="/users/groups"><i class="fa fa-users-cog"></i> Manage Groups</a></li>
                     </ul>
                 </li>
+                <% } %>
                 <li><a href="/categories"><i class="fa fa-tags"></i> Categories</a></li>
                 <li class="has-submenu">
                     <a href="#" onclick="toggleSubmenu(event)">
@@ -49,6 +51,7 @@
                         <li><a href="/sales/add"><i class="fa fa-plus-circle"></i> Add Sale</a></li>
                     </ul>
                 </li>
+                <% if (currentUser && currentUser.role === 'admin') { %>
                 <li class="has-submenu">
                     <a href="#" onclick="toggleSubmenu(event)">
                         <i class="fa fa-file-invoice"></i> Sales Report
@@ -59,6 +62,7 @@
                         <li><a href="/report/sales-report"><i class="fa fa-calendar"></i> Sales by Date</a></li>
                     </ul>
                 </li>
+                <% } %>
                 <li class="logout"><a href="/logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </nav>
@@ -82,7 +86,7 @@
 
     <main class="dashboard-content">
         <header class="dashboard-header" style="position: relative;">
-            <h1 class="page-title">Admin Dashboard</h1>
+            <h1 class="page-title"><%= title || 'Dashboard' %></h1>
 
             <!-- NOTIFICATION AREA (Top-right inside header) -->
             <div class="notification-area" aria-live="polite" aria-atomic="true">
@@ -97,7 +101,9 @@
                         <!-- notifications injected here -->
                     </ul>
                     <div style="padding:8px; text-align:center;">
+                        <% if (currentUser && currentUser.role === 'admin') { %>
                         <a href="/users" style="text-decoration:none; color:#007bff;">Manage users</a> ·
+                        <% } %>
                         <a href="/categories" style="text-decoration:none; color:#007bff;">Categories</a>
                     </div>
                 </div>
@@ -113,19 +119,19 @@
         <div class="metric-cards">
             <div class="metric-card users">
                 <div class="icon"><i class="fa fa-users"></i></div>
-                <div class="info"><h3>5</h3><p>Users</p></div>
+                <div class="info"><h3><%= stats.userCount %></h3><p>Users</p></div>
             </div>
             <div class="metric-card categories">
                 <div class="icon"><i class="fa fa-tags"></i></div>
-                <div class="info"><h3>8</h3><p>Categories</p></div>
+                <div class="info"><h3><%= stats.categoryCount %></h3><p>Categories</p></div>
             </div>
             <div class="metric-card products">
                 <div class="icon"><i class="fa fa-box"></i></div>
-                <div class="info"><h3>16</h3><p>Products</p></div>
+                <div class="info"><h3><%= stats.productCount %></h3><p>Products</p></div>
             </div>
             <div class="metric-card sales">
                 <div class="icon"><i class="fa fa-dollar-sign"></i></div>
-                <div class="info"><h3>7513.00</h3><p>Sales</p></div>
+                <div class="info"><h3>$<%= Number(stats.salesTotal).toFixed(2) %></h3><p>Sales</p></div>
             </div>
         </div>
 
@@ -134,11 +140,19 @@
                 <div class="card-header">Highest Selling Products</div>
                 <div class="card-body">
                     <table>
-                        <thead><tr><th>Product Name</th><th>Total Sold</th><th>Total Quantity</th></tr></thead>
+                        <thead><tr><th>Product Name</th><th>Units Sold</th><th>Transactions</th></tr></thead>
                         <tbody>
-                            <tr><td>Organic Milk (1L)</td><td>125</td><td>500</td></tr>
-                            <tr><td>Whole Wheat Bread</td><td>98</td><td>350</td></tr>
-                            <tr><td>Fresh Tomatoes</td><td>85</td><td>220</td></tr>
+                            <% if (topProducts.length) { %>
+                                <% topProducts.forEach((product) => { %>
+                                    <tr>
+                                        <td><%= product._id %></td>
+                                        <td><%= product.quantitySold %></td>
+                                        <td><%= product.transactionCount %></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="3">No sales recorded yet.</td></tr>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
@@ -149,9 +163,18 @@
                     <table>
                         <thead><tr><th>#</th><th>Product Name</th><th>Date</th><th>Total Sale</th></tr></thead>
                         <tbody>
-                            <tr><td>1</td><td>Organic Eggs (dozen)</td><td>2023-10-26</td><td>$45.00</td></tr>
-                            <tr><td>2</td><td>Avocados (each)</td><td>2023-10-26</td><td>$12.00</td></tr>
-                            <tr><td>3</td><td>Greek Yogurt</td><td>2023-10-25</td><td>$28.50</td></tr>
+                            <% if (latestSales.length) { %>
+                                <% latestSales.forEach((sale, index) => { %>
+                                    <tr>
+                                        <td><%= index + 1 %></td>
+                                        <td><%= sale.productName %></td>
+                                        <td><%= new Date(sale.createdAt).toLocaleDateString() %></td>
+                                        <td>$<%= Number(sale.total).toFixed(2) %></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="4">No sales recorded yet.</td></tr>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
@@ -162,9 +185,17 @@
                     <table>
                         <thead><tr><th>Product Name</th><th>Category</th><th>Price</th></tr></thead>
                         <tbody>
-                            <tr><td>Mangoes</td><td>Fruits</td><td>$2.50</td></tr>
-                            <tr><td>Brown Sugar</td><td>Baking</td><td>$4.75</td></tr>
-                            <tr><td>Lentils (1kg)</td><td>Pantry</td><td>$3.99</td></tr>
+                            <% if (recentProducts.length) { %>
+                                <% recentProducts.forEach((product) => { %>
+                                    <tr>
+                                        <td><%= product.name %></td>
+                                        <td><%= product.category ? product.category.name : 'Uncategorized' %></td>
+                                        <td>$<%= Number(product.price).toFixed(2) %></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr><td colspan="3">No products added yet.</td></tr>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>

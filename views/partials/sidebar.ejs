@@ -4,9 +4,11 @@
         <li class="<%= activePage === 'dashboard' ? 'active' : '' %>">
             <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
         </li>
+        <% if (currentUser && currentUser.role === 'admin') { %>
         <li class="<%= activePage === 'users' ? 'active' : '' %>">
             <a href="/users"><i class="fas fa-users"></i> User Management</a>
         </li>
+        <% } %>
         <li class="<%= activePage === 'categories' ? 'active' : '' %>">
             <a href="/categories"><i class="fas fa-list"></i> Categories</a>
         </li>
@@ -16,9 +18,11 @@
         <li class="<%= activePage === 'sales' ? 'active' : '' %>">
             <a href="/sales"><i class="fas fa-shopping-cart"></i> Sales</a>
         </li>
+        <% if (currentUser && currentUser.role === 'admin') { %>
         <li class="<%= activePage === 'sales-report' ? 'active' : '' %>">
-            <a href="/sales-report"><i class="fas fa-chart-line"></i> Sales Report</a>
+            <a href="/report/sales-report"><i class="fas fa-chart-line"></i> Sales Report</a>
         </li>
+        <% } %>
         <li>
             <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </li>
