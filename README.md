@@ -12,3 +12,13 @@ On PowerShell, copy the template with:
 ```powershell
 Copy-Item .env.example .env
 ```
+
+## Render deployment
+
+Set these variables in the Render service's Environment settings:
+
+- `NODE_ENV=production`
+- `MONGODB_URI` to the hosted MongoDB Atlas connection string for the `ManageEasy` database. Do not use a `127.0.0.1` URI on Render.
+- `SESSION_SECRET` and `JWT_SECRET` to different, randomly generated values. Never commit the actual values.
+
+Production sessions are stored in MongoDB. The app trusts Render's HTTPS proxy so the secure session cookie is issued correctly.

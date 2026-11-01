@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const morgan = require('morgan');
 const session = require('express-session');
+const { MongoStore } = require('connect-mongo');
 const flash = require('connect-flash');
 const dotenv = require('dotenv');
 const http = require('http');
@@ -31,6 +32,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Make Socket.IO available globally
 app.set('io', io);
 
@@ -57,9 +62,22 @@ if (!process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is missing');
 }
 
+if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI is missing');
+}
+
+const sessionStore = process.env.NODE_ENV === 'production'
+  ? MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: 'sessions',
+      ttl: 24 * 60 * 60
+    })
+  : undefined;
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -76,7 +94,6 @@ app.use(flash());
 // Global variables for EJS
 app.use((req, res, next) => {
   res.locals.messages = req.flash();
-  res.locals.currentUser = req.session.user || null;
   next();
 });
 
@@ -97,8 +114,6 @@ app.use((req, res, next) => {
 app.use(attachUserToView);
 
 // ------------------- ROUTES -------------------
-app.get('/login', (req, res) => res.render('login'));
-
 // Main app routes
 app.use('/', authRoutes);
 app.use('/products', productRoutes);

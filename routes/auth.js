@@ -35,12 +35,13 @@ router.post('/register', async (req, res) => {
       req.flash('error', 'Please fill all required fields');
       return res.redirect('/register');
     }
-    const exist = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const exist = await User.findOne({ email: normalizedEmail });
     if (exist) {
       req.flash('error', 'Email already registered');
       return res.redirect('/register');
     }
-    const user = new User({ name, email, password, role: role || 'staff' });
+    const user = new User({ name, email: normalizedEmail, password, role: role || 'staff' });
     await user.save();
     req.flash('info', 'Registration successful — please login');
     return res.redirect('/login');
@@ -59,27 +60,61 @@ router.post('/login', async (req, res) => {
       req.flash('error', 'Provide email and password');
       return res.redirect('/login');
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user || !(await user.comparePassword(password))) {
       req.flash('error', 'Invalid credentials');
       return res.redirect('/login');
     }
 
-    // create session
-    req.session.user = { id: user._id, name: user.name, email: user.email, role: user.role };
+    const redirectPath = user.role === 'admin' ? '/admin' : '/dashboard';
+    const sessionUser = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
 
-    if (user.role === 'admin') return res.redirect('/admin');
-    return res.redirect('/dashboard');
+    req.session.regenerate((sessionError) => {
+      if (sessionError) {
+        console.error('Login session error:', sessionError.message);
+        return res.status(500).render('login', {
+          title: 'Login',
+          messages: { error: 'Unable to start a login session. Please try again.' }
+        });
+      }
+
+      req.session.user = sessionUser;
+      req.session.save((saveError) => {
+        if (saveError) {
+          console.error('Login session save error:', saveError.message);
+          return res.status(500).render('login', {
+            title: 'Login',
+            messages: { error: 'Unable to start a login session. Please try again.' }
+          });
+        }
+
+        return res.redirect(redirectPath);
+      });
+    });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err.message);
     req.flash('error', 'Login failed');
     return res.redirect('/login');
   }
 });
 
 // Logout
-router.get('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/login'));
+router.get('/logout', (req, res, next) => {
+  req.session.destroy((err) => {
+    if (err) return next(err);
+    res.clearCookie('connect.sid', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    return res.redirect('/login');
+  });
 });
 
 // ------------------- DASHBOARD -------------------

@@ -1,21 +1,11 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
 exports.generateToken = (user) => {
   const payload = { id: user._id, role: user.role, email: user.email };
-  return jwt.sign(payload, process.env.JWT_SECRET || 'jwtsecret', { expiresIn: '7d' });
-};
-
-exports.ensureAuth = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1] || req.session?.token;
-  if(!token) return res.status(401).json({ message: 'Unauthorized' });
-  try{
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'jwtsecret');
-    req.user = await User.findById(payload.id).select('-password');
-    next();
-  }catch(e){
-    return res.status(401).json({ message: 'Invalid token' });
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is missing');
   }
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 exports.requireRole = (role) => (req, res, next) => {
